@@ -61,9 +61,5 @@ public class Util {
         }
         return sessionFactory;
     }
-    public static void closeSessionFactory() {
-        System.out.println("Закрываю соединение!");
-        sessionFactory.close();
-    }
 }
 

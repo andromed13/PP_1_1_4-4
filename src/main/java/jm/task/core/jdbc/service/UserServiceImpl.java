@@ -37,8 +37,5 @@ public class UserServiceImpl implements UserService {
     public void cleanUsersTable() {
         userDaoHibernate.cleanUsersTable();
     }
-//    public void closeCon () {
-//        userDaoHibernate.closeCon();
-//    }
 }
 

@@ -12,28 +12,19 @@ import java.util.List;
 import static jm.task.core.jdbc.util.Util.getSessionFactory;
 
 public class UserDaoHibernateImpl implements UserDao {
-    private static Session session = Util.getSessionFactory().openSession();
 
     public UserDaoHibernateImpl() {
     }
 
     @Override
     public void createUsersTable() {
-        Transaction transaction = session.beginTransaction();
+        Transaction transaction = null;
+        try (Session session = Util.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
         String sql = "CREATE TABLE IF NOT EXISTS userss " +
                 "(id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, " +
                 "name VARCHAR(50) NOT NULL, lastName VARCHAR(50) NOT NULL, " +
                 "age TINYINT NOT NULL)";
-            Query query = session.createSQLQuery(sql);
-            query.executeUpdate();
-            transaction.commit();
-    }
-
-    @Override
-    public void dropUsersTable() {
-        Transaction transaction = session.beginTransaction();
-        try {
-        String sql = "DROP TABLE IF EXISTS userss";
         Query query = session.createSQLQuery(sql);
         query.executeUpdate();
         transaction.commit();
@@ -45,9 +36,26 @@ public class UserDaoHibernateImpl implements UserDao {
     }
 
     @Override
+    public void dropUsersTable() {
+        Transaction transaction = null;
+        try (Session session = Util.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+            String sql = "DROP TABLE IF EXISTS userss";
+            Query query = session.createSQLQuery(sql);
+            query.executeUpdate();
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            } e.printStackTrace();
+        }
+    }
+
+    @Override
     public void saveUser(String name, String lastName, byte age) {
-        Transaction transaction = session.beginTransaction();
-        try {
+        Transaction transaction = null;
+        try (Session session = Util.getSessionFactory().openSession()){
+            transaction = session.beginTransaction();
             User user = new User();
             user.setName(name);
             user.setLastName(lastName);
@@ -65,8 +73,9 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public void removeUserById(long id) {
-        Transaction transaction = session.beginTransaction();
-        try {
+        Transaction transaction = null;
+        try (Session session = Util.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
             String hql = "DELETE FROM User WHERE id = :id";
             Query query = session.createQuery(hql);
             transaction.commit();
@@ -80,9 +89,10 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public List<User> getAllUsers() {
-        Transaction transaction = session.beginTransaction();
         List <User> users = new ArrayList<>();
-        try {
+        Transaction transaction = null;
+        try (Session session = Util.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
             String hql = "FROM User";
             Query query = session.createQuery(hql, User.class);
             users = query.getResultList();
@@ -98,10 +108,18 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public void cleanUsersTable() {
-        Transaction transaction = session.beginTransaction();
-        String hql = "DELETE FROM User ";
-        Query query = session.createQuery(hql);
-        query.executeUpdate();
-        transaction.commit();
+        Transaction transaction = null;
+        try (Session session = Util.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+            String hql = "DELETE FROM User ";
+            Query query = session.createQuery(hql);
+            query.executeUpdate();
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            e.printStackTrace();
+        }
     }
 }
